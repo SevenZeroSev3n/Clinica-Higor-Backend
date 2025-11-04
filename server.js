@@ -5,18 +5,17 @@ require('dotenv').config();
 
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const helmet = require('helmet');
-const mongoSanitizer = require('./middleware/mongoSanitizer'); 
-
+const mongoSanitizer = require('./middleware/mongoSanitizer');
+const cors = require('cors'); // Removido para usar apenas no Middleware
 
 // 2. Variáveis de Ambiente
 const MONGODB_URI = process.env.MONGODB_URI; 
-// CRÍTICO: Usa a porta do ambiente (8080 no Cloud Run) ou 5000 localmente.
-const PORT = process.env.PORT || 5000; 
+// Mantemos 8080 como o padrão do Cloud Run para escuta do Express
+const PORT = process.env.PORT || 8080; 
 
 
-// 3. Checagem de Segurança antes de conectar
+// 3. Checagem de Segurança
 if (!MONGODB_URI) {
     console.error("FATAL ERROR: MONGODB_URI não está definida.");
     process.exit(1);
@@ -29,35 +28,44 @@ const app = express();
 // 5. Middlewares de Segurança e Conexão
 app.use(helmet()); 
 app.use(express.json()); 
-app.use(mongoSanitizer); // Usando o sanitizador customizado
+app.use(mongoSanitizer); 
 
 app.use(cors({
     origin: '*', 
 }));
 
+// --- Funções de Inicialização ---
 
-// 6. Conexão com o MongoDB
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('Conexão com MongoDB bem-sucedida!'))
-    .catch(err => {
+// Função para iniciar a conexão com o MongoDB
+const connectDB = async () => {
+    try {
+        await mongoose.connect(MONGODB_URI);
+        console.log('Conexão com MongoDB bem-sucedida!');
+    } catch (err) {
         console.error('Erro na conexão com MongoDB. Detalhes:', err.message);
+        // Não encerramos o processo aqui, apenas logamos o erro
+    }
+};
+
+// Função para iniciar o servidor
+const startServer = () => {
+    // 🛑 CRÍTICO: Servidor Express escuta a porta antes de se preocupar com o DB
+    app.listen(PORT, () => { 
+        console.log(`Servidor Express rodando na porta ${PORT}`);
+        // Chama a conexão com o DB APÓS o servidor estar escutando
+        connectDB(); 
     });
+};
 
 
-// 7. Importar e Usar Rotas
+// 6. Rotas (devem ser definidas antes de iniciar o servidor)
 const agendamentoRoutes = require('./routes/agendamentoRoutes');
 app.use('/api/agendamentos', agendamentoRoutes);
 
-
-// Rota de Teste Simples
 app.get('/', (req, res) => {
     res.send('Servidor backend da Clínica rodando!');
 });
 
 
-// 8. Iniciar o Servidor
-// CRÍTICO: app.listen usa a variável PORT, que será 8080 no Cloud Run
-app.listen(PORT, () => { 
-    console.log(`Servidor rodando na porta ${PORT}`);
-    console.log(`Acessível em http://localhost:${PORT}`);
-});
+// 7. INÍCIO DA APLICAÇÃO
+startServer();
