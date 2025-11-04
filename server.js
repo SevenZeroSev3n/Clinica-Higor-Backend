@@ -13,7 +13,7 @@ const mongoSanitizer = require('./middleware/mongoSanitizer'); // Sanitizador cu
 
 // 2. Variáveis de Ambiente
 const MONGODB_URI = process.env.MONGODB_URI; 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 
 // 3. Checagem de Segurança
