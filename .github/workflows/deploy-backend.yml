@@ -1,0 +1,62 @@
+# backend/.github/workflows/deploy-backend.yml
+name: Deploy Backend Node.js to Cloud Run
+
+on:
+  push:
+    # Gatilhos: Enviar código para main ou staging
+    branches:
+      - main
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    # 1. Determina o Ambiente e o Nome do Serviço com base na branch
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 'Set Variables'
+        id: set_vars
+        run: |
+          # Define a região e os nomes dos serviços/ambientes
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "SERVICE_NAME=${{ secrets.CLOUD_RUN_SERVICE_NAME }}" >> $GITHUB_OUTPUT
+            echo "ENVIRONMENT=production" >> $GITHUB_OUTPUT
+          else
+            echo "SERVICE_NAME=${{ secrets.CLOUD_RUN_STAGING_SERVICE }}" >> $GITHUB_OUTPUT
+            echo "ENVIRONMENT=staging" >> $GITHUB_OUTPUT
+          fi
+          # Definido como São Paulo, se for sua região
+          echo "GCP_REGION=southamerica-east1" >> $GITHUB_OUTPUT 
+          
+      - name: 'Authenticate to Google Cloud'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      # Configura o gcloud SDK
+      - name: 'Set up Cloud SDK'
+        uses: google-github-actions/setup-gcloud@v2
+        
+      # 2. Build e Push da Imagem Docker
+      - name: Build and Push Docker Image
+        id: build_image
+        run: |
+          # O ponto no final do comando indica que o Dockerfile está na pasta atual (backend/)
+          gcloud builds submit \
+            --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest \
+            --project ${{ secrets.GCP_PROJECT_ID }} \
+            .
+            
+      # 3. Deploy no Cloud Run
+      - name: Deploy to Cloud Run (${{ steps.set_vars.outputs.ENVIRONMENT }})
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ steps.set_vars.outputs.SERVICE_NAME }}
+          region: ${{ steps.set_vars.outputs.GCP_REGION }}
+          image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          # Permite que a API seja acessível publicamente (necessário para o frontend)
+          allow-unauthenticated: true
