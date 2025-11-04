@@ -7,7 +7,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
-const mongoSanitizer = require('./middleware/mongoSanitizer'); // Sanitizador customizado
+const mongoSanitizer = require('./middleware/mongoSanitizer'); 
 
 
 // 2. Variáveis de Ambiente
