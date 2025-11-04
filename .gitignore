@@ -1,0 +1,8 @@
+# Dependências do Node
+/node_modules
+
+# Logs
+npm-debug.log*
+
+# Variáveis de Ambiente (CRÍTICO: NÃO PODE SUBIR)
+.env

@@ -1,0 +1,6 @@
+# backend/.dockerignore
+node_modules
+npm-debug.log
+.env
+# Ignorar o .gitignore do próprio backend para não ter problemas
+.gitignore
