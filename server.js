@@ -7,16 +7,16 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
-// Não precisamos mais do mongoSanitize (foi substituído pelo customizado, mas a lib ainda pode estar na pasta)
 const mongoSanitizer = require('./middleware/mongoSanitizer'); // Sanitizador customizado
 
 
 // 2. Variáveis de Ambiente
 const MONGODB_URI = process.env.MONGODB_URI; 
-const PORT = process.env.PORT || 8080;
+// CRÍTICO: Usa a porta do ambiente (8080 no Cloud Run) ou 5000 localmente.
+const PORT = process.env.PORT || 5000; 
 
 
-// 3. Checagem de Segurança
+// 3. Checagem de Segurança antes de conectar
 if (!MONGODB_URI) {
     console.error("FATAL ERROR: MONGODB_URI não está definida.");
     process.exit(1);
@@ -38,11 +38,7 @@ app.use(cors({
 
 // 6. Conexão com o MongoDB
 mongoose.connect(MONGODB_URI)
-    .then(() => {
-        console.log('Conexão com MongoDB bem-sucedida!');
-        // Se o serviço de notificação for configurado, ele deve inicializar aqui
-        const notificationService = require('./services/notificationService');
-    })
+    .then(() => console.log('Conexão com MongoDB bem-sucedida!'))
     .catch(err => {
         console.error('Erro na conexão com MongoDB. Detalhes:', err.message);
     });
@@ -60,7 +56,8 @@ app.get('/', (req, res) => {
 
 
 // 8. Iniciar o Servidor
-app.listen(PORT, () => {
+// CRÍTICO: app.listen usa a variável PORT, que será 8080 no Cloud Run
+app.listen(PORT, () => { 
     console.log(`Servidor rodando na porta ${PORT}`);
     console.log(`Acessível em http://localhost:${PORT}`);
 });
