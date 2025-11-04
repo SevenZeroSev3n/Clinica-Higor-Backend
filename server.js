@@ -10,14 +10,15 @@ const mongoSanitizer = require('./middleware/mongoSanitizer');
 const cors = require('cors');
 
 // 2. Variáveis de Ambiente
+// CRÍTICO: Usa process.env.MONGODB_URI (agora injetada pelo Cloud Run)
 const MONGODB_URI = process.env.MONGODB_URI; 
-// CRÍTICO: Usa a porta do ambiente (8080 no Cloud Run) ou 5000 localmente.
 const PORT = process.env.PORT || 8080; 
 
 
 // 3. Checagem de Segurança
 if (!MONGODB_URI) {
-    console.error("FATAL ERROR: MONGODB_URI não está definida.");
+    // Se a URI não for encontrada (o que pode ter sido o problema)
+    console.error("FATAL ERROR: MONGODB_URI não está definida. Verifique secrets do GitHub/GCP.");
     process.exit(1);
 }
 
@@ -45,10 +46,14 @@ app.get('/', (req, res) => {
 });
 
 
-// 7. Lógica de Conexão Separada (Não bloqueia o app.listen)
+// 7. Lógica de Conexão Separada (Com Timeout Forçado)
 const connectDB = async () => {
     try {
-        await mongoose.connect(MONGODB_URI);
+        await mongoose.connect(MONGODB_URI, {
+            // CRÍTICO: Timeout de 10 segundos para conexão Mongoose
+            serverSelectionTimeoutMS: 10000, 
+            socketTimeoutMS: 45000,
+        });
         console.log('Conexão com MongoDB bem-sucedida!');
     } catch (err) {
         console.error('ERRO CRÍTICO ao conectar ao MongoDB:', err.message);
@@ -56,7 +61,7 @@ const connectDB = async () => {
 };
 
 
-// 8. INÍCIO DA APLICAÇÃO (Ação Padrão para Docker/Cloud Run)
+// 8. INÍCIO DA APLICAÇÃO
 app.listen(PORT, () => { 
     console.log(`Servidor Express escutando na porta ${PORT}`);
     // Inicia a conexão com o DB APÓS o servidor Express estar ativo

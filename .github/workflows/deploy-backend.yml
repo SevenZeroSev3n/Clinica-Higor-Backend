@@ -3,7 +3,6 @@ name: Deploy Backend Node.js to Cloud Run
 
 on:
   push:
-    # Gatilhos: Enviar código para main ou staging
     branches:
       - main
       - staging
@@ -11,6 +10,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15 # Aumenta o tempo limite para o Job (para builds lentos)
     
     # 1. Determina o Ambiente e o Nome do Serviço com base na branch
     steps:
@@ -44,7 +44,6 @@ jobs:
       - name: Build and Push Docker Image
         id: build_image
         run: |
-          # O ponto no final do comando indica que o Dockerfile está na pasta atual (backend/)
           gcloud builds submit \
             --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest \
             --project ${{ secrets.GCP_PROJECT_ID }} \
@@ -58,4 +57,6 @@ jobs:
           region: ${{ steps.set_vars.outputs.GCP_REGION }}
           image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          flags: --allow-unauthenticated
+          # CRÍTICO: INJETAR A VARIÁVEL DE AMBIENTE MONGODB_URI NO CONTAINER
+          env: MONGODB_URI=${{ secrets.MONGODB_URI }}
+          flags: --allow-unauthenticated --timeout 900
