@@ -58,5 +58,4 @@ jobs:
           region: ${{ steps.set_vars.outputs.GCP_REGION }}
           image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          # Passado como flag para evitar erro de sintaxe
-          flags: --allow-unauthenticated --timeout 900
+          flags: --allow-unauthenticated

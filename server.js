@@ -7,11 +7,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 const mongoSanitizer = require('./middleware/mongoSanitizer');
-const cors = require('cors'); // Removido para usar apenas no Middleware
+const cors = require('cors');
 
 // 2. Variáveis de Ambiente
 const MONGODB_URI = process.env.MONGODB_URI; 
-// Mantemos 8080 como o padrão do Cloud Run para escuta do Express
+// CRÍTICO: Usa a porta do ambiente (8080 no Cloud Run) ou 5000 localmente.
 const PORT = process.env.PORT || 8080; 
 
 
@@ -25,7 +25,7 @@ if (!MONGODB_URI) {
 // 4. Inicializar o Express
 const app = express();
 
-// 5. Middlewares de Segurança e Conexão
+// 5. Middlewares
 app.use(helmet()); 
 app.use(express.json()); 
 app.use(mongoSanitizer); 
@@ -34,38 +34,31 @@ app.use(cors({
     origin: '*', 
 }));
 
-// --- Funções de Inicialização ---
 
-// Função para iniciar a conexão com o MongoDB
+// 6. Configuração de Rotas
+const agendamentoRoutes = require('./routes/agendamentoRoutes');
+app.use('/api/agendamentos', agendamentoRoutes);
+
+app.get('/', (req, res) => {
+    // Resposta de saúde imediata para o Cloud Run
+    res.send('Servidor backend da Clínica rodando!');
+});
+
+
+// 7. Lógica de Conexão Separada (Não bloqueia o app.listen)
 const connectDB = async () => {
     try {
         await mongoose.connect(MONGODB_URI);
         console.log('Conexão com MongoDB bem-sucedida!');
     } catch (err) {
-        console.error('Erro na conexão com MongoDB. Detalhes:', err.message);
-        // Não encerramos o processo aqui, apenas logamos o erro
+        console.error('ERRO CRÍTICO ao conectar ao MongoDB:', err.message);
     }
 };
 
-// Função para iniciar o servidor
-const startServer = () => {
-    // 🛑 CRÍTICO: Servidor Express escuta a porta antes de se preocupar com o DB
-    app.listen(PORT, () => { 
-        console.log(`Servidor Express rodando na porta ${PORT}`);
-        // Chama a conexão com o DB APÓS o servidor estar escutando
-        connectDB(); 
-    });
-};
 
-
-// 6. Rotas (devem ser definidas antes de iniciar o servidor)
-const agendamentoRoutes = require('./routes/agendamentoRoutes');
-app.use('/api/agendamentos', agendamentoRoutes);
-
-app.get('/', (req, res) => {
-    res.send('Servidor backend da Clínica rodando!');
+// 8. INÍCIO DA APLICAÇÃO (Ação Padrão para Docker/Cloud Run)
+app.listen(PORT, () => { 
+    console.log(`Servidor Express escutando na porta ${PORT}`);
+    // Inicia a conexão com o DB APÓS o servidor Express estar ativo
+    connectDB(); 
 });
-
-
-// 7. INÍCIO DA APLICAÇÃO
-startServer();
