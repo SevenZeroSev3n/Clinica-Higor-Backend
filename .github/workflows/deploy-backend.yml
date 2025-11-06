@@ -3,7 +3,6 @@ name: Deploy Backend Node.js to Cloud Run
 
 on:
   push:
-    # Gatilhos: Enviar código para main ou staging
     branches:
       - main
       - staging
@@ -20,7 +19,6 @@ jobs:
       - name: 'Set Variables'
         id: set_vars
         run: |
-          # Define a região e os nomes dos serviços/ambientes
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
             echo "SERVICE_NAME=${{ secrets.CLOUD_RUN_SERVICE_NAME }}" >> $GITHUB_OUTPUT
             echo "ENVIRONMENT=production" >> $GITHUB_OUTPUT
@@ -28,7 +26,6 @@ jobs:
             echo "SERVICE_NAME=${{ secrets.CLOUD_RUN_STAGING_SERVICE }}" >> $GITHUB_OUTPUT
             echo "ENVIRONMENT=staging" >> $GITHUB_OUTPUT
           fi
-          # Definido como São Paulo, se for sua região
           echo "GCP_REGION=southamerica-east1" >> $GITHUB_OUTPUT 
           
       - name: 'Authenticate to Google Cloud'
@@ -36,7 +33,6 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
           
-      # Configura o gcloud SDK
       - name: 'Set up Cloud SDK'
         uses: google-github-actions/setup-gcloud@v2
         
@@ -44,7 +40,6 @@ jobs:
       - name: Build and Push Docker Image
         id: build_image
         run: |
-          # CRÍTICO: REMOVIDO --no-cache, que era incompatível com a política do projeto GCP
           gcloud builds submit \
             --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest \
             --project ${{ secrets.GCP_PROJECT_ID }} \
@@ -59,4 +54,5 @@ jobs:
           image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           env_vars: MONGODB_URI=${{ secrets.MONGODB_URI }} 
-          flags: --allow-unauthenticated --timeout 900
+          # CRÍTICO: Configura o CORS na camada de rede do Cloud Run.
+          flags: --allow-unauthenticated --timeout 900 --set-cors-policy="http://localhost:5173"
