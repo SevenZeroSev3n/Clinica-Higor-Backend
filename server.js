@@ -32,7 +32,9 @@ app.use(express.json());
 app.use(mongoSanitizer); 
 
 app.use(cors({
-    origin: '*', 
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'], 
 }));
 
 
