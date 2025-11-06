@@ -45,7 +45,7 @@ jobs:
             --project ${{ secrets.GCP_PROJECT_ID }} \
             .
             
-      # 3. Deploy no Cloud Run
+     # 3. Deploy no Cloud Run
       - name: Deploy to Cloud Run (${{ steps.set_vars.outputs.ENVIRONMENT }})
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -53,6 +53,7 @@ jobs:
           region: ${{ steps.set_vars.outputs.GCP_REGION }}
           image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          env_vars: MONGODB_URI=${{ secrets.MONGODB_URI }} 
-          # CRÍTICO: Configura o CORS na camada de rede do Cloud Run.
+          # CRÍTICO: Mudar a injeção da variável de ambiente para o formato correto
+          env_vars: MONGODB_URI=${{ secrets.MONGODB_URI }}
+          # CRÍTICO: Aplicar o CORS na camada de rede com SINTAXE CORRETA (igual e aspas)
           flags: --allow-unauthenticated --timeout 900 --set-cors-policy="http://localhost:5173"
