@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     
-    # 1. Determina o Ambiente e o Nome do Serviço
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -27,7 +26,7 @@ jobs:
             echo "SERVICE_NAME=${{ secrets.CLOUD_RUN_STAGING_SERVICE }}" >> $GITHUB_OUTPUT
             echo "ENVIRONMENT=staging" >> $GITHUB_OUTPUT
           fi
-          echo "GCP_REGION=southamerica-east1" >> $GITHUB_OUTPUT 
+          echo "GCP_REGION=southamerica-east1" >> $GITHUB_OUTPUT
           
       - name: 'Authenticate to Google Cloud'
         uses: google-github-actions/auth@v2
@@ -37,16 +36,15 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: google-github-actions/setup-gcloud@v2
         
-      # 2. Build e Push da Imagem Docker
       - name: Build and Push Docker Image
         id: build_image
         run: |
           gcloud builds submit \
             --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest \
             --project ${{ secrets.GCP_PROJECT_ID }} \
+            --no-cache \
             .
             
-      # 3. Deploy no Cloud Run
       - name: Deploy to Cloud Run (${{ steps.set_vars.outputs.ENVIRONMENT }})
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -54,6 +52,5 @@ jobs:
           region: ${{ steps.set_vars.outputs.GCP_REGION }}
           image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          # CORREÇÃO CRÍTICA: MUDANÇA DE 'env' PARA 'env_vars'
           env_vars: MONGODB_URI=${{ secrets.MONGODB_URI }} 
           flags: --allow-unauthenticated --timeout 900

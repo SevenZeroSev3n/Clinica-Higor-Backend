@@ -1,6 +1,4 @@
 // backend/server.js
-
-// 🛑 1. Carregar Variáveis de Ambiente PRIMEIRO
 require('dotenv').config(); 
 
 const express = require('express');
@@ -9,50 +7,39 @@ const helmet = require('helmet');
 const mongoSanitizer = require('./middleware/mongoSanitizer');
 const cors = require('cors');
 
-// 2. Variáveis de Ambiente
-// CRÍTICO: Usa process.env.MONGODB_URI (agora injetada pelo Cloud Run)
 const MONGODB_URI = process.env.MONGODB_URI; 
 const PORT = process.env.PORT || 8080; 
 
-
-// 3. Checagem de Segurança
 if (!MONGODB_URI) {
-    // Se a URI não for encontrada (o que pode ter sido o problema)
-    console.error("FATAL ERROR: MONGODB_URI não está definida. Verifique secrets do GitHub/GCP.");
+    console.error("FATAL ERROR: MONGODB_URI não está definida.");
     process.exit(1);
 }
 
-
-// 4. Inicializar o Express
 const app = express();
 
-// 5. Middlewares
+// Middlewares de Segurança e CORS
 app.use(helmet()); 
+app.use(cors({
+    origin: '*', 
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(express.json()); 
 app.use(mongoSanitizer); 
 
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'], 
-}));
-
-
-// 6. Configuração de Rotas
+// Rotas
 const agendamentoRoutes = require('./routes/agendamentoRoutes');
 app.use('/api/agendamentos', agendamentoRoutes);
 
 app.get('/', (req, res) => {
-    // Resposta de saúde imediata para o Cloud Run
     res.send('Servidor backend da Clínica rodando!');
 });
 
-
-// 7. Lógica de Conexão Separada (Com Timeout Forçado)
+// Lógica de Conexão Separada
 const connectDB = async () => {
     try {
         await mongoose.connect(MONGODB_URI, {
-            // CRÍTICO: Timeout de 10 segundos para conexão Mongoose
             serverSelectionTimeoutMS: 10000, 
             socketTimeoutMS: 45000,
         });
@@ -62,10 +49,8 @@ const connectDB = async () => {
     }
 };
 
-
-// 8. INÍCIO DA APLICAÇÃO
+// Início da Aplicação
 app.listen(PORT, () => { 
     console.log(`Servidor Express escutando na porta ${PORT}`);
-    // Inicia a conexão com o DB APÓS o servidor Express estar ativo
     connectDB(); 
 });
