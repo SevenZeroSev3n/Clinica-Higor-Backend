@@ -53,7 +53,9 @@ jobs:
           region: ${{ steps.set_vars.outputs.GCP_REGION }}
           image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          # CRÍTICO: Mudar a injeção da variável de ambiente para o formato correto
           env_vars: MONGODB_URI=${{ secrets.MONGODB_URI }}
-          # CRÍTICO: Aplicar o CORS na camada de rede com SINTAXE CORRETA (igual e aspas)
-          flags: --allow-unauthenticated --timeout 900 --set-cors-policy="http://localhost:5173"
+          # CRÍTICO: Reformatando as flags para garantir que o --set-cors-policy seja reconhecido
+          flags: --allow-unauthenticated --timeout 900 --set-cors-policy="${{ env.CORS_ORIGIN }}" 
+        env:
+          # Definindo a variável de CORS no ambiente da ação para garantir as aspas
+          CORS_ORIGIN: http://localhost:5173
