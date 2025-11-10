@@ -1,51 +1,54 @@
-// backend/models/Agendamento.js (AJUSTADO)
-const mongoose = require('mongoose');
+// backend/models/Agendamento.js
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
 
-const agendamentoSchema = new mongoose.Schema({
+const Agendamento = sequelize.define('Agendamento', {
     nome_completo: {
-        type: String,
-        required: true,
-        trim: true
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     data_nascimento: {
-        type: String, // Mudança: Agora String
-        required: true
+        type: DataTypes.STRING,
+        allowNull: false
     },
     telefone: {
-        type: String,
-        required: true
+        type: DataTypes.STRING,
+        allowNull: false
     },
     email: {
-        type: String,
-        required: true,
-        lowercase: true,
-        trim: true
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+            isEmail: true
+        }
     },
-    data_agendamento: { 
-        type: String, // <--- CORREÇÃO CRÍTICA: MUDADO DE 'Date' PARA 'String'
-        required: true
+    data_agendamento: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
-    hora_agendamento: { 
-        type: String,
-        required: true
+    hora_agendamento: {
+        type: DataTypes.STRING,
+        allowNull: false
     },
     endereco: {
-        type: String,
-        default: ''
+        type: DataTypes.STRING,
+        defaultValue: ''
     },
     mensagem: {
-        type: String,
-        default: ''
+        type: DataTypes.STRING,
+        defaultValue: ''
     },
     status: {
-        type: String,
-        enum: ['Pendente', 'Confirmado', 'Cancelado'],
-        default: 'Pendente'
+        type: DataTypes.ENUM('Pendente', 'Confirmado', 'Cancelado'),
+        defaultValue: 'Pendente'
     },
     data_registro: {
-        type: Date,
-        default: Date.now
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     }
+}, {
+    tableName: 'agendamentos',
+    timestamps: false
 });
 
-module.exports = mongoose.model('Agendamento', agendamentoSchema);
+module.exports = Agendamento;
