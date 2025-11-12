@@ -2,16 +2,25 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-const sequelize = new Sequelize(process.env.DATABASE_URL, {
+// Check if the DATABASE_URL is for a local environment
+const isLocal = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('localhost');
+
+const options = {
   dialect: 'postgres',
   protocol: 'postgres',
-  dialectOptions: {
+};
+
+// Only add SSL options if it's NOT a local connection
+if (!isLocal) {
+  options.dialectOptions = {
     ssl: {
       require: true,
       rejectUnauthorized: false
     }
-  }
-});
+  };
+}
+
+const sequelize = new Sequelize(process.env.DATABASE_URL, options);
 
 const connectDB = async () => {
   try {
