@@ -1,12 +1,9 @@
 // backend/controllers/agendamentoController.js
-
 const Agendamento = require('../models/Agendamento');
 const agendamentoValidationSchema = require('../validation/agendamentoSchema');
-const notificationService = require('../services/notificationService'); // Importa o Serviço
+const notificationService = require('../services/notificationService');
 
 exports.createAgendamento = async (req, res) => {
-    
-    // 1. Validação Joi
     const { error, value } = agendamentoValidationSchema.validate(req.body);
 
     if (error) {
@@ -22,7 +19,6 @@ exports.createAgendamento = async (req, res) => {
         address, message 
     } = value;
 
-    // 2. Validação de Data/Hora no Futuro (Lógica de Negócios)
     const localDateTimeString = `${schedulingDate}T${schedulingTime}:00`;
     const preferredDateTime = new Date(localDateTimeString);
     
@@ -35,7 +31,6 @@ exports.createAgendamento = async (req, res) => {
     }
 
     try {
-        // 3. Salva no MongoDB (Model)
         const agendamentoSalvo = await Agendamento.create({
             nome_completo: name, 
             data_nascimento: birthdate,
@@ -47,11 +42,8 @@ exports.createAgendamento = async (req, res) => {
             mensagem: message,
         });
         
-        // 4. ENVIA OS EMAILS (Service)
-        // Isso não bloqueia a resposta se o email falhar.
         notificationService.sendEmailNotifications(agendamentoSalvo); 
 
-        // 5. Resposta de sucesso
         res.status(201).json({ 
             message: 'Agendamento criado e e-mails de notificação iniciados.', 
             agendamento: agendamentoSalvo 
@@ -60,9 +52,9 @@ exports.createAgendamento = async (req, res) => {
     } catch (error) {
         console.error('Erro interno do servidor:', error);
         
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(val => val.message);
-            return res.status(400).json({ message: `Erro de Mongoose: ${messages.join(', ')}` });
+        if (error.name === 'SequelizeValidationError') {
+            const messages = error.errors.map(err => err.message);
+            return res.status(400).json({ message: `Erro de Sequelize: ${messages.join(', ')}` });
         }
 
         res.status(500).json({ 
