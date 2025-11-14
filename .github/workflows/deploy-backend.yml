@@ -53,6 +53,6 @@ jobs:
           region: ${{ steps.set_vars.outputs.GCP_REGION }}
           image: gcr.io/${{ secrets.GCP_PROJECT_ID }}/${{ steps.set_vars.outputs.SERVICE_NAME }}:latest
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          env_vars: MONGODB_URI=${{ secrets.MONGODB_URI }} 
+          env_vars: DATABASE_URL=${{ secrets.DATABASE_URL }}
           # CRÍTICO: Removida a flag --set-cors-policy, o Express corrigido fará o trabalho.
           flags: --allow-unauthenticated --timeout 900
