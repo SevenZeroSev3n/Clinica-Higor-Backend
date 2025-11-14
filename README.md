@@ -1,26 +1,58 @@
-# Clinica Odontológica Dr. Higor - BACKEND
+# Clínica Higor - API RESTful
 
-Este repositório hospeda a API RESTful e a lógica de negócios da clínica, responsável pela validação de dados, agendamento de consultas e envio de notificações via e-mail. A arquitetura segue o padrão MVC (Model-View-Controller) para organização.
+## Descrição
 
-## Tecnologias de Servidor
+API RESTful para o projeto **Clínica Higor**, desenvolvida para gerenciar agendamentos de consultas.
 
-* **Runtime:** Node.js
-* **Framework:** Express.js
-* **Banco de Dados:** MongoDB (hospedado no Atlas)
-* **ORM/Driver:** Mongoose
-* **Notificações:** Nodemailer (via SMTP do Gmail)
+## Tecnologias Utilizadas
 
-## Configuração de Ambiente (.env)
+- **Node.js**: Ambiente de execução JavaScript.
+- **Express**: Framework para construção da API.
+- **Mongoose**: Modelagem de dados para o MongoDB.
+- **MongoDB**: Banco de dados NoSQL.
+- **Dotenv**: Gerenciamento de variáveis de ambiente.
+- **Nodemailer**: Módulo para envio de e-mails.
 
-O arquivo .env é obrigatório para a inicialização do servidor e não deve ser subido ao GitHub.
+## Instalação
 
-### Variáveis Essenciais:
+1.  **Clone o repositório:**
+    ```bash
+    git clone https://github.com/seu-usuario/clinica-higor-backend.git
+    ```
+2.  **Acesse o diretório do projeto:**
+    ```bash
+    cd clinica-higor-backend
+    ```
+3.  **Instale as dependências:**
+    ```bash
+    npm install
+    ```
 
-```env
-MONGODB_URI="[Sua URI de conexão do MongoDB Atlas]"
-PORT=5000
+## Uso
 
-# Credenciais de Envio de E-mail (Requer Senha de App do Gmail)
-EMAIL_USER="seu_email_de_envio@gmail.com"
-EMAIL_PASS="[Senha de App de 16 dígitos]"
-EMAIL_DESTINATARIO="testefronspace@gmail.com"
+1.  **Configure as variáveis de ambiente:**
+
+    Crie um arquivo `.env` na raiz do projeto e adicione as seguintes variáveis:
+
+    ```
+    PORT=8080
+    MONGO_URI=mongodb+srv://<user>:<password>@<cluster-url>/<database-name>?retryWrites=true&w=majority
+    EMAIL_USER=seu-email@gmail.com
+    EMAIL_PASS=sua-senha-de-app
+    ```
+
+2.  **Inicie o servidor de desenvolvimento:**
+    ```bash
+    npm run start:dev
+    ```
+    O servidor estará disponível em `http://localhost:8080`.
+
+## Endpoints da API
+
+- `POST /api/agendamentos`: Cria um novo agendamento.
+- `GET /api/agendamentos`: Retorna todos os agendamentos.
+- `GET /api/agendamentos/:id`: Retorna um agendamento específico.
+- `PUT /api/agendamentos/:id`: Atualiza um agendamento.
+- `DELETE /api/agendamentos/:id`: Deleta um agendamento.
+
+---
